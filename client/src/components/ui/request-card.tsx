@@ -1,0 +1,71 @@
+import { Request } from "@/types";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { StatusBadge } from "./status-badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
+import { MessageCircle, Clock } from "lucide-react";
+import { getPriorityIcon } from "@/lib/mockData";
+
+interface RequestCardProps {
+  request: Request;
+  onClick?: () => void;
+  isSelected?: boolean;
+}
+
+export function RequestCard({ request, onClick, isSelected }: RequestCardProps) {
+  return (
+    <Card 
+      className={`cursor-pointer hover-lift transition-smooth ${
+        isSelected ? 'ring-2 ring-primary shadow-glow' : ''
+      }`}
+      onClick={onClick}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm leading-tight truncate">
+              {request.title}
+            </h3>
+            <div className="flex items-center gap-2 mt-2">
+              <StatusBadge status={request.status} />
+              <Badge variant="outline" className="text-xs">
+                {getPriorityIcon(request.priority)} {request.priority}
+              </Badge>
+            </div>
+          </div>
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarImage src={request.user.avatar} alt={request.user.name} />
+            <AvatarFallback className="text-xs">
+              {request.user.name.split(' ').map(n => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+          {request.description}
+        </p>
+        
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Clock className="h-3 w-3" />
+            {formatDistanceToNow(request.createdAt, { addSuffix: true })}
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <MessageCircle className="h-3 w-3" />
+            <span>{request.responses.length}</span>
+          </div>
+        </div>
+        
+        <div className="mt-2">
+          <Badge variant="secondary" className="text-xs">
+            {request.category}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

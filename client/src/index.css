@@ -1,0 +1,229 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* QueryHub Design System - Beautiful gradient-based theme with status colors */
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    /* Card components */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    /* Interactive elements */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary brand colors - Blue tones */
+    --primary: 214 95% 56%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 214 95% 75%;
+
+    /* Secondary colors */
+    --secondary: 220 13% 95%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted colors */
+    --muted: 220 13% 95%;
+    --muted-foreground: 215 25% 27%;
+
+    /* Accent colors */
+    --accent: 220 13% 95%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Status colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 221 83% 53%;
+    --info-foreground: 0 0% 100%;
+
+    /* Form elements */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 239 84% 67%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(214 95% 56%), hsl(208 95% 68%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 13% 98%), hsl(220 13% 95%));
+    --gradient-hero: linear-gradient(135deg, hsl(214 95% 56%), hsl(208 95% 68%), hsl(202 95% 75%));
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px hsl(220 13% 91% / 0.4);
+    --shadow-medium: 0 4px 20px hsl(220 13% 91% / 0.6);
+    --shadow-strong: 0 8px 32px hsl(220 13% 91% / 0.8);
+    --shadow-glow: 0 0 24px hsl(214 95% 56% / 0.3);
+
+    /* Animation timings */
+    --transition-fast: 0.15s ease-out;
+    --transition-normal: 0.3s ease-out;
+    --transition-slow: 0.5s ease-out;
+
+    --radius: 0.75rem;
+
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 214 95% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 95%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 214 95% 56%;
+  }
+
+  .dark {
+    /* Dark theme base colors */
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+
+    /* Dark card components */
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    /* Dark interactive elements */
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Dark primary colors */
+    --primary: 214 95% 56%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 214 95% 75%;
+
+    /* Dark secondary colors */
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Dark muted colors */
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Dark accent colors */
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Dark status colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 221 83% 53%;
+    --info-foreground: 0 0% 100%;
+
+    /* Dark form elements */
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 214 95% 56%;
+
+    /* Dark gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(214 95% 56%), hsl(208 95% 68%));
+    --gradient-secondary: linear-gradient(135deg, hsl(217 33% 15%), hsl(217 33% 17%));
+    --gradient-hero: linear-gradient(135deg, hsl(214 95% 56%), hsl(208 95% 68%), hsl(202 95% 75%));
+
+    /* Dark shadows */
+    --shadow-soft: 0 2px 8px hsl(222 47% 6% / 0.8);
+    --shadow-medium: 0 4px 20px hsl(222 47% 6% / 0.9);
+    --shadow-strong: 0 8px 32px hsl(222 47% 6% / 0.95);
+    --shadow-glow: 0 0 24px hsl(214 95% 56% / 0.4);
+
+    /* Dark sidebar colors */
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 240 5% 96%;
+    --sidebar-primary: 214 95% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 15%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 214 95% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Status badges */
+  .status-new {
+    @apply bg-info text-info-foreground;
+  }
+  
+  .status-pending {
+    @apply bg-warning text-warning-foreground;
+  }
+  
+  .status-resolved {
+    @apply bg-success text-success-foreground;
+  }
+  
+  .status-urgent {
+    @apply bg-destructive text-destructive-foreground;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  /* Shadow utilities */
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .shadow-strong {
+    box-shadow: var(--shadow-strong);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Animation utilities */
+  .transition-smooth {
+    transition: var(--transition-normal);
+  }
+  
+  .transition-fast {
+    transition: var(--transition-fast);
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    @apply transition-smooth hover:shadow-medium hover:-translate-y-1;
+  }
+  
+  .hover-glow {
+    @apply transition-smooth hover:shadow-glow;
+  }
+}
