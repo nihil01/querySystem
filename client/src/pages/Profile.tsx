@@ -13,11 +13,11 @@ export function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: currentUser?.name || "",
-    email: currentUser?.email || "",
-    phone: "",
-    department: "",
-    bio: "",
+    name: currentUser?.fullName || "",
+    email: currentUser?.role || "",
+    phone: currentUser?.phone || "",
+    department: currentUser?.department || "",
+    bio: currentUser.principalName,
   });
 
   const handleSave = async () => {
@@ -64,9 +64,9 @@ export function Profile() {
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+              <AvatarImage src={""} alt={currentUser.fullName} />
               <AvatarFallback className="text-lg">
-                {currentUser.name.split(' ').map(n => n[0]).join('')}
+                {currentUser.fullName.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             {isEditing && (

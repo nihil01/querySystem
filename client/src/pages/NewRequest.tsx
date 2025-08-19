@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/layout/AuthProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,37 +8,57 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Send } from "lucide-react";
+import {ArrowLeft, Send} from "lucide-react";
+import {wrapRequest} from "@/utils/NetworkWrapper.ts";
+
 
 export function NewRequest() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
+    issuer: currentUser?.principalName,
     title: "",
-    description: "",
+    subcategory: "",
     priority: "normal",
+    description: "",
     category: "",
+    dc:"",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.description) {
+    if (!formData.title || !formData.subcategory || !formData.category || !formData.dc) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
+
+      const response = await wrapRequest("http://localhost:8080/api/v1/request/create", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+      });
+
+
+      if (!response.ok) {
+          toast.error("Something went wrong .. Try again later");
+          return;
+      }
+
+    const data = await response.json();
+    console.log(data)
+
     toast.success("Request submitted successfully!");
     navigate("/");
     setIsSubmitting(false);
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string|boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -112,6 +132,35 @@ export function NewRequest() {
                   </SelectContent>
                 </Select>
               </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="subcategory">Subcategory</Label>
+                    <Select value={formData.subcategory} onValueChange={(value) => handleInputChange("subcategory", value)}>
+                        <SelectTrigger className="transition-smooth focus:shadow-glow">
+                            <SelectValue placeholder="Select subcategory" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="prod">Prod</SelectItem>
+                            <SelectItem value="preProd">Preprod</SelectItem>
+                            <SelectItem value="test">Test</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="category">DC</Label>
+                    <Select value={formData.dc} onValueChange={(value) => handleInputChange("dc", value)}>
+                        <SelectTrigger className="transition-smooth focus:shadow-glow">
+                            <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="DC1">DC1</SelectItem>
+                            <SelectItem value="DC2">DC2</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+
             </div>
 
             <div className="space-y-2">

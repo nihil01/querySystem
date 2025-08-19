@@ -14,7 +14,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("accessToken");
         if (!token) return;
 
         fetch("http://localhost:8080/api/v1/auth/verify", {
@@ -59,14 +59,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Selected role " + role);
         console.log("User role " + data.role);
 
-        if (data && data.token) {
+        if (data && data.refreshToken) {
             if (data.role === role) {
                 setCurrentUser(data);
             } else {
                 data.role = "USER";
                 setCurrentUser(data);
             }
-            localStorage.setItem("token", data.token);
+
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+
         }
     };
 

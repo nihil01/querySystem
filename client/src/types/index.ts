@@ -34,5 +34,6 @@ export interface User {
     department: string;
     phone: string;
     role: UserRole;
-    token: string;
+    accessToken: string;
+    refreshToken: string;
 }

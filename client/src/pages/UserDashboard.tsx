@@ -34,7 +34,7 @@ export function UserDashboard() {
                 <Button asChild className="gradient-primary hover-glow">
                     <Link to="/new-request">
                         <Plus className="mr-2 h-4 w-4" />
-                        New Request
+                        New Project
                     </Link>
                 </Button>
             </div>
