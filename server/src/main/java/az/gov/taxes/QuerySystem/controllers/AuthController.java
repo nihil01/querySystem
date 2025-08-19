@@ -6,6 +6,7 @@ import az.gov.taxes.QuerySystem.services.auth.AuthService;
 import az.gov.taxes.QuerySystem.services.jwt.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
@@ -38,6 +39,22 @@ public class AuthController {
                 return jwtService.extractUser(token.substring(7)).map(ResponseEntity::ok);
             }else {
                 return Mono.just(ResponseEntity.status(401).build());
+            }
+        });
+    }
+
+    @GetMapping("/reissue")
+    public Mono<?> reissue(ServerWebExchange exchange) {
+        String token = exchange.getRequest().getHeaders().getFirst("Authorization");
+        if (token == null || !token.startsWith("Refresh ")) {
+            return Mono.empty();
+        }
+
+        return jwtService.verifyToken(token.substring(9)).flatMap(aBoolean -> {
+            if (aBoolean) {
+                return jwtService.refreshToken(token.substring(9)).map(ResponseEntity::ok);
+            }else {
+                return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
             }
         });
     }

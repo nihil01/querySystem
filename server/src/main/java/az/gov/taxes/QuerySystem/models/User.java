@@ -16,5 +16,8 @@ public class User {
     private String department;
     private String phone;
     private String role;
-    private String token;
+
+    private String refreshToken;
+    private String accessToken;
+
 }

@@ -1,5 +1,6 @@
 package az.gov.taxes.QuerySystem.services.jwt;
 
+import az.gov.taxes.QuerySystem.models.TokenExchangeDTO;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,6 +28,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -89,16 +91,27 @@ public class JwtService {
         }
     }
 
-    public String signToken(User data){
+    public TokenExchangeDTO signToken(User data){
         Map<String, Object> json = objectMapper.convertValue(data, new TypeReference<>(){});
-        Instant expiresAfter = Instant.now().plus(1, ChronoUnit.DAYS);
 
-        return JWT.create()
-            .withExpiresAt(expiresAfter)
+        Instant expiresAfterAccess = Instant.now().plus(1, ChronoUnit.HOURS);
+        Instant expiresAfterRefresh = Instant.now().plus(7, ChronoUnit.DAYS);
+
+        String accessToken =  JWT.create()
+            .withExpiresAt(expiresAfterAccess)
             .withIssuedAt(Instant.now())
             .withIssuer("query-system-api")
             .withPayload(json)
             .sign(algorithm);
+
+        String refreshToken =  JWT.create()
+                .withExpiresAt(expiresAfterRefresh)
+                .withIssuedAt(Instant.now())
+                .withIssuer("query-system-api")
+                .withPayload(json)
+                .sign(algorithm);
+
+        return new TokenExchangeDTO(accessToken, refreshToken);
     }
 
     public Mono<Boolean> verifyToken(String token) {
@@ -114,6 +127,22 @@ public class JwtService {
             }
         });
     }
+
+    public Mono<String> refreshToken(String token){
+        return extractUser(token)
+                .flatMap(user -> Mono.fromCallable(() -> {
+                    Map<String, Object> json = objectMapper.convertValue(user, new TypeReference<>(){});
+                    Instant expiresAfter = Instant.now().plus(1, ChronoUnit.HOURS);
+
+                    return JWT.create()
+                        .withExpiresAt(expiresAfter)
+                        .withIssuedAt(Instant.now())
+                        .withIssuer("query-system-api")
+                        .withPayload(json)
+                        .sign(algorithm);
+                }));
+    }
+
 
 
     public Mono<User> extractUser(String token) {

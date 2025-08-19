@@ -1,6 +1,7 @@
 package az.gov.taxes.QuerySystem.services.auth;
 
 import az.gov.taxes.QuerySystem.configuration.AppBeans;
+import az.gov.taxes.QuerySystem.models.TokenExchangeDTO;
 import az.gov.taxes.QuerySystem.models.User;
 import az.gov.taxes.QuerySystem.services.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -63,13 +64,15 @@ public class AuthService {
                         user.setRole("USER");
                     }
 
-                    user.setToken(jwtService.signToken(user));
+                    TokenExchangeDTO tokens = jwtService.signToken(user);
+                    user.setAccessToken(tokens.access_token());
+                    user.setRefreshToken(tokens.refresh_token());
 
                     return user;
                 });
 
             if (users.isEmpty()) return null;
-            return users.get(0);
+            return users.getFirst();
 
         }).flatMap(user -> user != null ? Mono.just(user) : Mono.empty());
     }
