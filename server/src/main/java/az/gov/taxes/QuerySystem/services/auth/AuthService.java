@@ -57,6 +57,7 @@ public class AuthService {
                     user.setDepartment(attrs.get("department") != null ? attrs.get("department").get().toString() : null);
                     user.setPosition(attrs.get("title") != null ? attrs.get("title").get().toString() : attrs.get("description").get().toString());
                     user.setPhone(attrs.get("telephoneNumber") != null ? attrs.get("telephoneNumber").get().toString() : "-");
+                    user.setMemberSince(attrs.get("whenCreated") != null ? attrs.get("whenCreated").get().toString() : "-");
 
                     if (appBeans.defaultAdministrators().contains(user.getPrincipalName().toLowerCase())){
                         user.setRole("ADMIN");

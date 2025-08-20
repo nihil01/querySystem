@@ -1,21 +1,6 @@
-export type RequestStatus = 'new' | 'pending' | 'resolved' | 'urgent';
+export type RequestStatus = 'low' | 'normal' | 'high' | 'urgent';
 
 export type UserRole = 'USER' | 'ADMIN';
-
-
-export interface Request {
-  id: string;
-  title: string;
-  description: string;
-  status: RequestStatus;
-  priority: 'low' | 'medium' | 'high';
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-  user: User;
-  category: string;
-  responses: Response[];
-}
 
 export interface Response {
   id: string;
@@ -34,6 +19,26 @@ export interface User {
     department: string;
     phone: string;
     role: UserRole;
+    
+
+    memberSince: string
     accessToken: string;
     refreshToken: string;
+
+    preferedDashboard: string;
+}
+
+export interface Request {
+  id: number;
+  issuer: string;
+  title: string;
+  subcategory: string;
+  priority: string;
+  category: string;
+  description: string;
+  dc: string;
+  vlanId: string;
+  vrf: string;
+  subnet: string;
+  created_at: Date
 }

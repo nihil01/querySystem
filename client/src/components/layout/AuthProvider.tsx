@@ -60,13 +60,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("User role " + data.role);
 
         if (data && data.refreshToken) {
-            if (data.role === role) {
-                setCurrentUser(data);
-            } else {
-                data.role = "USER";
-                setCurrentUser(data);
-            }
+            if (data.role !== role) data.role = "USER";
 
+            data.preferedDashboard = role;
+            setCurrentUser(data);
+        
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
 

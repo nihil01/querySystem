@@ -8,30 +8,31 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const getStatusLabel = (status: RequestStatus) => {
-    switch (status) {
-      case 'new':
-        return 'New';
-      case 'pending':
-        return 'In Progress';
-      case 'resolved':
-        return 'Resolved';
-      case 'urgent':
-        return 'Urgent';
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "low":
+        return "bg-blue-100 text-blue-800";
+      case "normal":
+        return "bg-green-100 text-green-800";
+      case "urgent":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-purple-100 text-purple-800";
       default:
-        return status;
+        return "bg-gray-100 text-gray-800";
     }
   };
+
 
   return (
     <span
       className={cn(
         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-smooth",
-        getStatusColor(status),
+        getCategoryColor(status),
         className
       )}
     >
-      {getStatusLabel(status)}
+      {status}
     </span>
   );
 }

@@ -39,6 +39,7 @@ export async function wrapRequest(
 
     if (response.status === 401 && currentRefreshToken) {
         const refreshed = await reissueToken(currentRefreshToken);
+        console.log("refreshed", refreshed);
         if (refreshed) {
             const newAccessToken = localStorage.getItem("accessToken");
             response = await fetch(url, {
@@ -59,6 +60,6 @@ export async function wrapRequest(
         throw new Error(`HTTP error ${response.status}`);
     }
 
-    return await response.json();
+    return response;
 }
 

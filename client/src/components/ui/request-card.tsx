@@ -1,4 +1,4 @@
-import { Request } from "@/types";
+import { Request, RequestStatus } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "./status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,16 +28,14 @@ export function RequestCard({ request, onClick, isSelected }: RequestCardProps) 
               {request.title}
             </h3>
             <div className="flex items-center gap-2 mt-2">
-              <StatusBadge status={request.status} />
-              <Badge variant="outline" className="text-xs">
-                {getPriorityIcon(request.priority)} {request.priority}
-              </Badge>
+              <StatusBadge status={request.priority as RequestStatus} />
             </div>
           </div>
           <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarImage src={request.user.avatar} alt={request.user.name} />
+            <AvatarImage src={""} alt={request.issuer} />
             <AvatarFallback className="text-xs">
-              {request.user.name.split(' ').map(n => n[0]).join('')}
+              {request.issuer.slice(0, request.issuer.indexOf("@")).split('.')
+              .map(n => n[0]).join('').toLocaleUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -51,12 +49,12 @@ export function RequestCard({ request, onClick, isSelected }: RequestCardProps) 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <Clock className="h-3 w-3" />
-            {formatDistanceToNow(request.createdAt, { addSuffix: true })}
+            {formatDistanceToNow(request.created_at, { addSuffix: true })}
           </div>
           
           <div className="flex items-center gap-1">
             <MessageCircle className="h-3 w-3" />
-            <span>{request.responses.length}</span>
+            <span>{request.title}</span>
           </div>
         </div>
         

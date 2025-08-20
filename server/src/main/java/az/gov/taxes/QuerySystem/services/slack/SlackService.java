@@ -1,5 +1,6 @@
 package az.gov.taxes.QuerySystem.services.slack;
 
+import az.gov.taxes.QuerySystem.models.db.Request;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
@@ -22,8 +23,19 @@ public class SlackService {
     @Value("${slack.token}")
     private String token;
 
-    //TODO FINISH IMPLEMENTATION OF MESSAGES IN SLACK
-    public Mono<Void> sendMessage(String text) {
+    private String formatRequestMessage(Request request) {
+
+        return "*New Request Submitted*\n\n" +
+            "*Issuer:* " + request.getIssuer() + "\n" +
+            "*Title:* " + request.getTitle() + "\n" +
+            "*Category:* " + request.getCategory() + "\n" +
+            "*Priority:* " + request.getPriority() + "\n" +
+            "*DC:* " + request.getDc() + "\n" +
+            "*Description:*\n" + request.getDescription() + "\n";
+    }
+
+
+    public Mono<Void> sendMessage(Request request) {
         return Mono.fromRunnable(() -> {
 
             //get current users in channel
@@ -44,7 +56,7 @@ public class SlackService {
             try {
                 response = slack.methods(token).chatPostMessage(r -> r
                         .channel(CHANNEL)
-                        .text(text)
+                        .text(formatRequestMessage(request))
                 );
             } catch (IOException | SlackApiException e) {
                 throw new RuntimeException(e);

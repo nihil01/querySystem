@@ -33,7 +33,7 @@ function AppRoutes() {
           <Header />
           <main className="flex-1 overflow-auto">
             <Routes>
-              {currentUser?.role === 'ADMIN' ? (
+              {currentUser?.role === 'ADMIN' && currentUser?.preferedDashboard === 'ADMIN' ? (
                 <Route path="/" element={<AdminDashboard />} />
               ) : (
                 <Route path="/" element={<UserDashboard />} />

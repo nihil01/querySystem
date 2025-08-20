@@ -20,6 +20,21 @@ export function Profile() {
     bio: currentUser.principalName,
   });
 
+  function formatLDAPDate(ldapDate: string) {
+    const cleaned = ldapDate.replace(".0Z", "");
+  
+    const year = parseInt(cleaned.slice(0, 4));
+    const month = parseInt(cleaned.slice(4, 6)) - 1; 
+    const day = parseInt(cleaned.slice(6, 8));
+    const hour = parseInt(cleaned.slice(8, 10));
+    const minute = parseInt(cleaned.slice(10, 12));
+    const second = parseInt(cleaned.slice(12, 14));
+  
+    const date = new Date(Date.UTC(year, month, day, hour, minute, second));
+    return date.toLocaleString();
+  }
+  
+
   const handleSave = async () => {
     setIsSaving(true);
     
@@ -164,8 +179,7 @@ export function Profile() {
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
-              <p className="text-lg font-medium">January 2024</p>
-            </div>
+              <p className="text-lg font-medium">{formatLDAPDate(currentUser.memberSince)}</p>            </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Account Status</Label>
               <p className="text-lg font-medium text-success">Active</p>
