@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 public class AppBeans {
@@ -19,6 +21,11 @@ public class AppBeans {
             "nijat.aliyev@taxes.gov.az"
         );
 
+    }
+
+    @Bean
+    public ConcurrentHashMap<String, Map<String, String>> slackUsers(){
+        return new ConcurrentHashMap<>();
     }
 
 }

@@ -1,89 +1,68 @@
-import { useState, useEffect } from "react";
+import { Request } from "@/types";
 import { useAuth } from "@/components/layout/AuthProvider";
-import { RequestCard } from "@/components/ui/request-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
-import { wrapRequest } from "@/utils/NetworkWrapper";
-import { Request } from "@/types";
+import { cn } from "@/lib/utils";
 
-export function UserDashboard() {
-    const { currentUser } = useAuth();
-    const [userRequests, setUserRequests] = useState<Request[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+interface UserDashboardProps {
+  data: Request[];
+}
 
+const PRIORITY_COLORS: Record<string, string> = {
+  low: "bg-green-100 text-green-800",
+  normal: "bg-blue-100 text-blue-800",
+  high: "bg-yellow-100 text-yellow-800",
+  urgent: "bg-red-100 text-red-800",
+};
 
-    useEffect(() => {
-        if (!currentUser) return;
+export function UserDashboard({ data }: UserDashboardProps) {
+  const { currentUser } = useAuth();
+  if (!currentUser) return null;
 
-        const fetchRequests = async () => {
-            setLoading(true);
-            try {
-                const res = await wrapRequest(`http://localhost:8080/api/v1/request/get-all?issuer=${currentUser.principalName}`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-                if (!res.ok) {
-                    throw new Error("Failed to load requests");
-                }
-                const data = await res.json();
-                console.log("data", data);
-                setUserRequests(data);
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+  const priorities = ["low", "normal", "high", "urgent"];
 
-        fetchRequests();
-    }, [currentUser]);
+  const stats = priorities.map(p => ({
+    priority: p,
+    count: data.filter(el => el.priority === p).length,
+  }));
 
-    if (!currentUser) return null;
-
-    return (
-        <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">Welcome back, {currentUser.fullName}</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage your requests and track their progress
-                    </p>
-                </div>
-                <Button asChild className="gradient-primary hover-glow">
-                    <Link to="/new-request">
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Request
-                    </Link>
-                </Button>
-            </div>
-
-            {/* Error & Loading */}
-            {loading && <p>Loading requests...</p>}
-            {error && <p className="text-red-500">{error}</p>}
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Пример карточки */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Total</CardTitle>
-                        <CardDescription>{userRequests.length}</CardDescription>
-                    </CardHeader>
-                </Card>
-                {/* сюда можно добавить остальные */}
-            </div>
-
-            {/* Recent Requests */}
-            <div className="space-y-4">
-                {userRequests.map((req) => (
-                    <RequestCard key={req.id} request={req} />
-                ))}
-            </div>
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Welcome back, {currentUser.fullName}</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your requests and track their progress
+          </p>
         </div>
-    );
+        <Button asChild className="gradient-primary hover-glow">
+          <Link to="/new-request" className="flex items-center">
+            <Plus className="mr-2 h-4 w-4" /> New Request
+          </Link>
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <Card className="bg-gray-50 dark:bg-gray-800">
+          <CardHeader>
+            <CardTitle>Total Requests</CardTitle>
+            <CardDescription>{data.length}</CardDescription>
+          </CardHeader>
+        </Card>
+
+        {stats.map(stat => (
+          <Card key={stat.priority} className={cn("overflow-hidden", PRIORITY_COLORS[stat.priority])}>
+            <CardHeader>
+              <CardTitle className="capitalize">{stat.priority} Priority</CardTitle>
+              <CardDescription className="text-lg font-bold">{stat.count}</CardDescription>
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
 }

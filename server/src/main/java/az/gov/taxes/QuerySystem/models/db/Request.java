@@ -27,6 +27,7 @@ public class Request {
     private String category;
     private String description;
     private String dc;
+    private Boolean resolved;
 
     //extra fields
     @Column("vlan_id")

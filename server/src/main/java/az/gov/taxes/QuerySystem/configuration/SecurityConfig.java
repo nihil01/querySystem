@@ -42,6 +42,7 @@ public class SecurityConfig implements WebFluxConfigurer {
         return http.authorizeExchange(exchanges -> exchanges
                 .pathMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                 .pathMatchers(HttpMethod.GET, "/static/**").permitAll()
+                .pathMatchers(HttpMethod.POST, "/api/v1/request/send-admin-response").hasRole("ADMIN")
                 .anyExchange().authenticated()
             )
             .exceptionHandling(exceptionHandlingSpec ->

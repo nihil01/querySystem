@@ -52,6 +52,7 @@ export async function wrapRequest(
         } else {
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
+            location.reload();
             throw new Error("Refresh token expired or invalid");
         }
     }

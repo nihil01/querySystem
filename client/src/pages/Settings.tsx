@@ -1,37 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Save, Bell, Shield, Palette, Globe } from "lucide-react";
+import { Save, Bell } from "lucide-react";
+import { useAuth } from "@/components/layout/AuthProvider";
+import { wrapRequest } from "@/utils/NetworkWrapper";
 
 export function Settings() {
+  const { currentUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-    weeklyDigest: true,
-    autoRefresh: true,
-    twoFactorAuth: false,
-    language: "en",
-    timezone: "UTC",
-    theme: "system",
-  });
+  const [slackNotifications, setSlackNotifications] = useState(true);
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  // Инициализация из localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("slackNotifications");
+    if (saved !== null) {
+      setSlackNotifications(saved === "YES");
+    }
+  }, []);
+
+  const handleToggle = async (checked: boolean) => {
+    setSlackNotifications(checked);
+    const state = checked ? "YES" : "NO";
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast.success("Settings saved successfully!");
-    setIsSaving(false);
+    // Сохраняем локально
+    localStorage.setItem("slackNotifications", state);
+
+    // Отправляем на бэкенд
+    try {
+      const response = await wrapRequest(
+        `http://localhost:8080/api/v1/request/notifications?issuer=${encodeURIComponent(currentUser?.principalName || "")}&state=${state}`,
+        {
+          method: "GET",
+          headers: {
+              "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update notification state");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not update notification settings on server");
+    }
   };
 
-  const handleSettingChange = (key: string, value: boolean | string) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+  const handleSave = () => {
+    setIsSaving(true);
+    // Можно добавить дополнительные действия при сохранении
+    setTimeout(() => {
+      toast.success("Settings saved successfully!");
+      setIsSaving(false);
+    }, 500);
   };
 
   return (
@@ -43,18 +66,9 @@ export function Settings() {
             Manage your application preferences and account settings
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="gradient-primary hover-glow"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
       </div>
 
       <div className="space-y-6">
-        {/* Notifications */}
         <Card className="hover-lift">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -68,44 +82,14 @@ export function Settings() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Email Notifications</Label>
+                <Label>Slack Notifications</Label>
                 <p className="text-sm text-muted-foreground">
-                  Receive email notifications for new requests and updates
+                  Receive slack notifications for new requests and updates
                 </p>
               </div>
               <Switch
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => handleSettingChange("emailNotifications", checked)}
-              />
-            </div>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Push Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Get instant push notifications on your device
-                </p>
-              </div>
-              <Switch
-                checked={settings.pushNotifications}
-                onCheckedChange={(checked) => handleSettingChange("pushNotifications", checked)}
-              />
-            </div>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Weekly Digest</Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive a weekly summary of your activity
-                </p>
-              </div>
-              <Switch
-                checked={settings.weeklyDigest}
-                onCheckedChange={(checked) => handleSettingChange("weeklyDigest", checked)}
+                checked={slackNotifications}
+                onCheckedChange={handleToggle}
               />
             </div>
           </CardContent>

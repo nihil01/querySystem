@@ -14,7 +14,7 @@ export function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: currentUser?.fullName || "",
-    email: currentUser?.role || "",
+    email: currentUser?.principalName || "",
     phone: currentUser?.phone || "",
     department: currentUser?.department || "",
     bio: currentUser.principalName,
@@ -178,8 +178,9 @@ export function Profile() {
               <p className="text-lg capitalize font-medium">{currentUser.role}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
-              <p className="text-lg font-medium">{formatLDAPDate(currentUser.memberSince)}</p>            </div>
+              <Label className="text-sm font-medium text-muted-foreground">Account Created</Label>
+              <p className="text-lg font-medium">{formatLDAPDate(currentUser.memberSince)}</p>
+            </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Account Status</Label>
               <p className="text-lg font-medium text-success">Active</p>

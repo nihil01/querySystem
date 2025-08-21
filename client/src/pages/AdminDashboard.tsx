@@ -2,209 +2,170 @@ import { useState } from "react";
 import { useAuth } from "@/components/layout/AuthProvider";
 import { RequestCard } from "@/components/ui/request-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockRequests } from "@/lib/mockData";
-import { 
-  MessageSquare, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
-  Users,
-  TrendingUp,
-  Timer
-} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Request } from "@/types";
+import { CheckCircle, Timer, TrendingUp, AlertTriangle, MessageSquare } from "lucide-react";
+import { wrapRequest } from "@/utils/NetworkWrapper";
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  data: Request[];
+}
+
+export function AdminDashboard({ data }: AdminDashboardProps) {
   const { currentUser } = useAuth();
-  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+  const [responseText, setResponseText] = useState("");
 
-    const stats = {
-        total: 0,
-        pending: 0,
-        resolved: 0,
-        urgent: 0,
-    };
+  if (!currentUser || currentUser.role !== "ADMIN") return null;
 
-  if (!currentUser || currentUser.role !== 'ADMIN') return null;
+  const stats = {
+    total: data.length,
+    resolved: data.filter(r => r.resolved).length,
+    pending: data.filter(r => !r.resolved && r.priority !== "urgent").length,
+    urgent: data.filter(r => r.priority === "urgent" && !r.resolved).length,
+    new: data.filter(r => !r.resolved).length
+  };
 
-  const resolvedPercentage = Math.round((stats.resolved / stats.total) * 100);
-  const pendingRequests = mockRequests.filter(req => req.status === 'pending' || req.status === 'urgent');
-  const recentRequests = mockRequests.slice(0, 4);
+  const selectedRequest = data.find(r => r.id === selectedRequestId);
 
-    return (
+  const handleSelectRequest = (id: number) => setSelectedRequestId(id);
+
+  const handleAdminResponse = async () => {
+    if (!selectedRequest || !responseText.trim()) return;
+
+    try {
+      await wrapRequest(`/api/v1/request/send-admin-response`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: selectedRequest.id,
+          admin: currentUser.fullName,
+          adminResponse: responseText
+        })
+      });
+
+      setResponseText("");
+      // обновить данные локально, либо перезагрузить панель
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRejectRequest = async () => {
+    if (!selectedRequest) return;
+
+    try {
+      await wrapRequest(`/api/v1/request/deleteRequest?id=${selectedRequest.id}&issuer=${selectedRequest.issuer}`, {
+        method: "DELETE"
+      });
+
+      setSelectedRequestId(null);
+      // обновить данные локально после удаления
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Monitor and manage all customer requests
-          </p>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              +2 from last week
-            </p>
+            <p className="text-xs text-muted-foreground">Total requests in system</p>
           </CardContent>
         </Card>
 
         <Card className="hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
             <Timer className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{stats.pending + stats.urgent}</div>
-            <p className="text-xs text-muted-foreground">
-              Require attention
-            </p>
+            <p className="text-xs text-muted-foreground">Require attention</p>
           </CardContent>
         </Card>
 
         <Card className="hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex justify-between pb-2">
             <CardTitle className="text-sm font-medium">Resolution Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{resolvedPercentage}%</div>
-            <p className="text-xs text-muted-foreground">
-              +5% from last month
-            </p>
+            <div className="text-2xl font-bold text-success">{Math.round((stats.resolved / stats.total) * 100)}%</div>
+            <p className="text-xs text-muted-foreground">Resolved requests percentage</p>
           </CardContent>
         </Card>
 
         <Card className="hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex justify-between pb-2">
             <CardTitle className="text-sm font-medium">Urgent Issues</CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{stats.urgent}</div>
-            <p className="text-xs text-muted-foreground">
-              Immediate action needed
-            </p>
+            <p className="text-xs text-muted-foreground">Immediate action needed</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Request Status Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="hover-lift">
           <CardHeader>
-            <CardTitle>Request Status Overview</CardTitle>
-            <CardDescription>Current distribution of all requests</CardDescription>
+            <CardTitle>Requests</CardTitle>
+            <CardDescription>Select a request to respond</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-success"></div>
-                  Resolved
-                </span>
-                <span className="font-medium">{stats.resolved}</span>
-              </div>
-              <Progress value={(stats.resolved / stats.total) * 100} className="h-2" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-warning"></div>
-                  Pending
-                </span>
-                <span className="font-medium">{stats.pending}</span>
-              </div>
-              <Progress value={(stats.pending / stats.total) * 100} className="h-2" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-info"></div>
-                  New
-                </span>
-                <span className="font-medium">{stats.new}</span>
-              </div>
-              <Progress value={(stats.new / stats.total) * 100} className="h-2" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                  Urgent
-                </span>
-                <span className="font-medium">{stats.urgent}</span>
-              </div>
-              <Progress value={(stats.urgent / stats.total) * 100} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pending Requests */}
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle>Requests Requiring Attention</CardTitle>
-            <CardDescription>
-              {pendingRequests.length} requests need your response
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {pendingRequests.length === 0 ? (
-              <div className="text-center py-8">
-                <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">All caught up!</h3>
-                <p className="text-muted-foreground">
-                  No pending requests at the moment
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingRequests.slice(0, 3).map((request) => (
-                  <RequestCard
-                    key={request.id}
-                    request={request}
-                    onClick={() => setSelectedRequest(request.id)}
-                    isSelected={selectedRequest === request.id}
-                  />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Requests</CardTitle>
-          <CardDescription>
-            Latest requests from all users
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {recentRequests.map((request) => (
+          <CardContent className="space-y-2">
+            {data.map((req) => (
               <RequestCard
-                key={request.id}
-                request={request}
-                onClick={() => setSelectedRequest(request.id)}
-                isSelected={selectedRequest === request.id}
+                key={req.id}
+                request={req}
+                onClick={() => handleSelectRequest(req.id)}
+                isSelected={selectedRequestId === req.id}
               />
             ))}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {selectedRequest && (
+          <Card className="lg:col-span-2 hover-lift">
+            <CardHeader>
+              <CardTitle>{selectedRequest.title}</CardTitle>
+              <CardDescription>
+                Priority: {selectedRequest.priority} | Status: {selectedRequest.resolved ? "Resolved" : "Open"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p><b>Category:</b> {selectedRequest.category}</p>
+              <p><b>Subcategory:</b> {selectedRequest.subcategory}</p>
+              <p><b>Description:</b> {selectedRequest.description}</p>
+              <p><b>Issuer:</b> {selectedRequest.issuer}</p>
+
+              <Textarea
+                value={responseText}
+                onChange={(e) => setResponseText(e.target.value)}
+                placeholder="Write your response..."
+              />
+
+              <div className="flex gap-2">
+                <Button onClick={handleAdminResponse} className="gradient-primary">
+                  Send Response
+                </Button>
+                <Button onClick={handleRejectRequest} variant="destructive">
+                  Reject Request
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

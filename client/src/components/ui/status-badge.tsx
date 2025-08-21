@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { RequestStatus } from "@/types";
-import { getStatusColor } from "@/lib/mockData";
 
 interface StatusBadgeProps {
   status: RequestStatus;

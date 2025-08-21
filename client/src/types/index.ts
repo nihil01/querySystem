@@ -41,4 +41,5 @@ export interface Request {
   vrf: string;
   subnet: string;
   created_at: Date
+  resolved: boolean
 }
