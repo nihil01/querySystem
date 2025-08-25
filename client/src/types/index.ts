@@ -24,22 +24,39 @@ export interface User {
     memberSince: string
     accessToken: string;
     refreshToken: string;
+}
 
-    preferedDashboard: string;
+// models.ts
+
+export interface AdminResponse {
+    id: number;
+    requestId: number;
+    admin: string;
+    adminResponse: string;
 }
 
 export interface Request {
-  id: number;
-  issuer: string;
-  title: string;
-  subcategory: string;
-  priority: string;
-  category: string;
-  description: string;
-  dc: string;
-  vlanId: string;
-  vrf: string;
-  subnet: string;
-  created_at: Date
-  resolved: boolean
+    id: number;
+    issuer: string;
+    title: string;
+    subcategory: string[];
+    priority: string;
+    category: string;
+    description: string;
+    dc: string[];
+    resolved: boolean;
+
+    // extra fields
+    vlanId?: string;
+    vrf?: string;
+    subnet?: string;
+
+    // auto-generated
+    created_at: string; // Instant → string (ISO 8601)
 }
+
+export interface SingleRequestFullResponse {
+    adminResponse?: AdminResponse;
+    userRequest: Request;
+}
+

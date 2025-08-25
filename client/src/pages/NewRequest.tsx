@@ -22,10 +22,7 @@ export function NewRequest() {
     priority: "normal",
     description: "",
     category: "",
-    dc: "UNDEFINED",
-    vlanId: "",
-    vrf: "",
-    subnet: "",
+    dc: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,10 +62,13 @@ export function NewRequest() {
 
     toast.success("Request submitted successfully!");
     navigate("/");
+    location.reload();
     setIsSubmitting(false);
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
+      console.log(field)
+      console.log(value)
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -146,85 +146,61 @@ export function NewRequest() {
                   </Select>
                 </div>
 
-            {/* Доп. поля только если категория = newProject */}
-            {formData.category === "newProject" && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                
-                <div className="space-y-2">
-                  <Label htmlFor="subcategory">Subcategory</Label>
-                  <Select
-                    value={formData.subcategory}
-                    onValueChange={(value) => handleInputChange("subcategory", value)}
-                  >
-                    <SelectTrigger className="transition-smooth focus:shadow-glow">
-                      <SelectValue placeholder="Select subcategory" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="prod">Prod</SelectItem>
-                      <SelectItem value="preProd">Preprod</SelectItem>
-                      <SelectItem value="test">Test</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {formData.category === "newProject" && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                          <Label>Subcategory</Label>
+                          <div className="flex flex-col gap-2">
+                              {["prod", "preProd", "test"].map((option) => (
+                                  <div key={option} className="flex items-center space-x-2">
+                                      <input
+                                          type="checkbox"
+                                          id={option}
+                                          checked={formData.subcategory?.includes(option)}
+                                          onChange={(e) => {
+                                              const newValue = e.target.checked
+                                                  ? [...(formData.subcategory || []), option]
+                                                  : formData.subcategory.filter((v: string) => v !== option);
+                                              handleInputChange("subcategory", newValue);
+                                          }}
+                                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                      />
+                                      <Label htmlFor={option} className="text-sm capitalize">
+                                          {option}
+                                      </Label>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="dc">DC</Label>
-                  <Select
-                    value={formData.dc}
-                    onValueChange={(value) => handleInputChange("dc", value)}
-                  >
-                    <SelectTrigger className="transition-smooth focus:shadow-glow">
-                      <SelectValue placeholder="Select Datacenter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dc1">DC1</SelectItem>
-                      <SelectItem value="dc2">DC2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      <div className="space-y-2">
+                          <Label>DC</Label>
+                          <div className="flex flex-col gap-2">
+                              {["dc1", "dc2"].map((dc) => (
+                                  <div key={dc} className="flex items-center space-x-2">
+                                      <input
+                                          type="checkbox"
+                                          id={dc}
+                                          checked={formData.dc?.includes(dc)}
+                                          onChange={(e) => {
+                                              const newValue = e.target.checked
+                                                  ? [...(formData.dc || []), dc]
+                                                  : formData.dc.filter((v: string) => v !== dc);
+                                              handleInputChange("dc", newValue);
+                                          }}
+                                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                      />
+                                      <Label htmlFor={dc} className="text-sm uppercase">
+                                          {dc}
+                                      </Label>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  </div>
+              )}
 
-                <div className="space-y-2 p-4 rounded-2xl shadow-sm border hover:shadow-md transition">
-                  <Label htmlFor="vlanId" className="font-semibold">
-                    VLAN ID
-                  </Label>
-                  <Input
-                    id="vlanId"
-                    placeholder="e.g. 100"
-                    className="focus:shadow-glow transition-smooth"
-                    value={formData.vlanId}
-                    onChange={(e) => handleInputChange("vlanId", e.target.value)}
-                  />
-              </div>
-
-              <div className="space-y-2 p-4 rounded-2xl shadow-sm border hover:shadow-md transition">
-                <Label htmlFor="vrf" className="font-semibold">
-                  VRF
-                </Label>
-                <Input
-                  id="vrf"
-                  placeholder="e.g. PROD_VRF"
-                  className="focus:shadow-glow transition-smooth"
-                  value={formData.vrf}
-                  onChange={(e) => handleInputChange("vrf", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2 p-4 rounded-2xl shadow-sm border hover:shadow-md transition">
-                <Label htmlFor="subnet" className="font-semibold">
-                  Subnet
-                </Label>
-                <Input
-                  id="subnet"
-                  placeholder="e.g. 192.168.1.0/24"
-                  className="focus:shadow-glow transition-smooth"
-                  value={formData.subnet}
-                  onChange={(e) => handleInputChange("subnet", e.target.value)}
-                />
-              </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
+              <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"

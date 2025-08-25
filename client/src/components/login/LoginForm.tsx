@@ -8,14 +8,13 @@ import { UserRole } from "@/types";
 import { User, Shield } from "lucide-react";
 
 export function LoginForm() {
-    const [selectedRole, setSelectedRole] = useState<UserRole>("USER");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const { login } = useAuth();
 
     const handleLogin = () => {
-        console.log("Logging in with:", { email, password, selectedRole });
-        login(selectedRole, email, password);
+        console.log("Logging in with:", { email, password});
+        login( email, password);
     };
 
     return (
@@ -114,55 +113,6 @@ export function LoginForm() {
                             />
                         </div>
 
-                        <div>
-                            <Label>Daxil ol:</Label>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                                <Button
-                                    variant={selectedRole === "USER" ? "default" : "outline"}
-                                    onClick={() => setSelectedRole("USER")}
-                                    style={{
-                                        height: "auto",
-                                        padding: "1rem",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: "0.5rem",
-                                        background: selectedRole === "USER" ? "#2563eb" : "#f8f9fa",
-                                        color: selectedRole === "USER" ? "#fff" : "#000",
-                                        border: "1px solid #ccc",
-                                        borderRadius: "0.75rem",
-                                    }}
-                                >
-                                    <User style={{ height: "1.5rem", width: "1.5rem" }} />
-                                    <span style={{ fontWeight: 500 }}>İstifadəçi</span>
-                                    <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-                                        Sorğular yaradın və baxın
-                                    </span>
-                                </Button>
-
-                                <Button
-                                    variant={selectedRole === "ADMIN" ? "default" : "outline"}
-                                    onClick={() => setSelectedRole("ADMIN")}
-                                    style={{
-                                        height: "auto",
-                                        padding: "1rem",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: "0.5rem",
-                                        background: selectedRole === "ADMIN" ? "#2563eb" : "#f8f9fa",
-                                        color: selectedRole === "ADMIN" ? "#fff" : "#000",
-                                        border: "1px solid #ccc",
-                                        borderRadius: "0.75rem",
-                                    }}
-                                >
-                                    <Shield style={{ height: "1.5rem", width: "1.5rem" }} />
-                                    <span style={{ fontWeight: 500 }}>Administrator</span>
-                                    <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-                                        Bütün sorğuları idarə edin
-                                    </span>
-                                </Button>
-                            </div>
-                        </div>
-
                         <Button
                             onClick={handleLogin}
                             style={{
@@ -175,7 +125,7 @@ export function LoginForm() {
                                 marginTop: "0.5rem",
                             }}
                         >
-                            {selectedRole === "ADMIN" ? "Administrator" : "İstifadəçi"} kimi davam et
+                            Davam et
                         </Button>
 
                         <p style={{ fontSize: "0.75rem", textAlign: "center", color: "#666" }}>

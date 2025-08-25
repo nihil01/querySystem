@@ -1,10 +1,7 @@
 package az.gov.taxes.QuerySystem.controllers;
 
 import az.gov.taxes.QuerySystem.configuration.AppBeans;
-import az.gov.taxes.QuerySystem.models.AdminResponseDTO;
-import az.gov.taxes.QuerySystem.models.RequestDTO;
-import az.gov.taxes.QuerySystem.models.SingleRequestFullResponse;
-import az.gov.taxes.QuerySystem.models.User;
+import az.gov.taxes.QuerySystem.models.*;
 import az.gov.taxes.QuerySystem.models.db.AdminResponse;
 import az.gov.taxes.QuerySystem.models.db.Request;
 import az.gov.taxes.QuerySystem.repositories.AdminResponseRepository;
@@ -36,22 +33,39 @@ public class RequestController {
     public Mono<?> createRequest(@RequestBody RequestDTO req) {
         return requestRepository.save(mapToRequest(req))
             .flatMap(savedRequest ->
-                slackService.sendMessage(savedRequest)
+                slackService.sendMessage(savedRequest, RequestType.CREATE)
                     .thenReturn(savedRequest)
             );
     }
 
 
     @GetMapping("/get-all")
-    public Flux<az.gov.taxes.QuerySystem.models.db.Request> getAllRequests(@RequestParam String issuer,
-                @AuthenticationPrincipal User user) {
+    public Flux<SingleRequestFullResponse> getAllRequests(
+            @RequestParam(required = false) String issuer,
+            @AuthenticationPrincipal User user) {
 
-        if (!issuer.equalsIgnoreCase(user.getPrincipalName())) {
-            return Flux.error(new RuntimeException("OTHER_ACCOUNT_FORBIDDEN"));
+        Flux<Request> requests;
+
+        if (issuer == null || issuer.isEmpty()) {
+            requests = requestRepository.findAll();
+        } else {
+            if (!issuer.equalsIgnoreCase(user.getPrincipalName())) {
+                return Flux.error(new RuntimeException("OTHER_ACCOUNT_FORBIDDEN"));
+            }
+            requests = requestRepository.findByIssuer(issuer);
         }
-        return requestRepository.findByIssuer(issuer);
 
+        return requests.flatMap(request ->
+                adminResponseRepository.findByRequestId(request.getId())
+                        .defaultIfEmpty(new AdminResponse())
+                        .map(adminResponse -> SingleRequestFullResponse.builder()
+                                .userRequest(request)
+                                .adminResponse(adminResponse)
+                                .build()
+                        )
+        );
     }
+
 
     @DeleteMapping("/deleteRequest")
     public Mono<?> deleteRequest(@RequestParam("id") Long id, @RequestParam("issuer") String issuer ,@AuthenticationPrincipal User user) {
@@ -65,10 +79,44 @@ public class RequestController {
 
     }
 
-    @PostMapping("/send-admin-response")
-    public Mono<?> sendAdminResponse(@RequestBody AdminResponseDTO adminResponse) {
-        return adminResponseRepository.save(mapToAdminResponse(adminResponse));
+    //ADMIN ENDPOINTS
+    /// ******************************************************************************
+
+    @PostMapping("/manage-request")
+    public Mono<?> rejectRequest(@RequestBody AdminResponseDTO adminResponse, @AuthenticationPrincipal User user) {
+        System.out.println(adminResponse);
+        return requestRepository.findById(adminResponse.getRequestId())
+                .switchIfEmpty(Mono.empty())
+                .flatMap(existingRequest -> {
+                    if (existingRequest.getResolved()) return Mono.empty();
+
+                    existingRequest.setResolved(true);
+
+                    if (!adminResponse.getVrf().isEmpty()) existingRequest.setVrf(adminResponse.getVrf());
+                    if (!adminResponse.getSubnet().isEmpty()) existingRequest.setSubnet(adminResponse.getSubnet());
+                    if (!adminResponse.getVlanId().isEmpty()) existingRequest.setVlanId(adminResponse.getVlanId());
+
+                    return requestRepository.save(existingRequest)
+                            .flatMap(savedRequest ->
+                                    adminResponseRepository.save(
+                                                    mapToAdminResponse(adminResponse, user.getPrincipalName())
+                                            )
+                                            .map(savedResponse -> Map.entry(savedRequest, savedResponse))
+                            );
+                })
+                .flatMap(entry -> {
+                    var existingRequest = entry.getKey();
+                    var savedResponse = entry.getValue();
+
+                    return slackService.sendMessage(existingRequest, savedResponse,
+                        adminResponse.getState().equalsIgnoreCase("REJECTED")
+                                ? RequestType.REJECT : RequestType.CLOSE,
+                        existingRequest.getIssuer());
+                });
     }
+
+
+    /// ******************************************************************************
 
     @GetMapping("/get-response/{id}")
     public Mono<?> getResponseByID(@PathVariable Long id, @AuthenticationPrincipal User user) {
@@ -129,20 +177,17 @@ public class RequestController {
             .issuer(dto.getIssuer())
             .subcategory(dto.getSubcategory())
             .category(dto.getCategory())
-            .vrf(dto.getVrf())
-            .subnet(dto.getSubnet())
-            .vlanId(dto.getVlanId())
             .description(dto.getDescription())
             .priority(dto.getPriority())
             .build();
     }
 
-    private AdminResponse mapToAdminResponse(AdminResponseDTO dto) {
+    private AdminResponse mapToAdminResponse(AdminResponseDTO dto, String admin) {
 
         return AdminResponse.builder()
             .adminResponse(dto.getAdminResponse())
             .requestId(dto.getRequestId())
-            .admin(dto.getAdmin())
+            .admin(admin)
             .build();
 
     }

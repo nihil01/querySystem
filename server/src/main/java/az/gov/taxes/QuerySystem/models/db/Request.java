@@ -1,5 +1,6 @@
 package az.gov.taxes.QuerySystem.models.db;
 
+import io.r2dbc.postgresql.codec.Json;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,11 +24,13 @@ public class Request {
 
     private String issuer;
     private String title;
-    private String subcategory;
+
+    private List<String> subcategory;
+    private List<String> dc;
+
     private String priority;
     private String category;
     private String description;
-    private String dc;
     private Boolean resolved;
 
     //extra fields

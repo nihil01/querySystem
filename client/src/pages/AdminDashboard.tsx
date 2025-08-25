@@ -1,72 +1,41 @@
-import { useState } from "react";
 import { useAuth } from "@/components/layout/AuthProvider";
-import { RequestCard } from "@/components/ui/request-card";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Request } from "@/types";
-import { CheckCircle, Timer, TrendingUp, AlertTriangle, MessageSquare } from "lucide-react";
-import { wrapRequest } from "@/utils/NetworkWrapper";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {Request, SingleRequestFullResponse} from "@/types";
+import { Timer, TrendingUp, AlertTriangle, MessageSquare } from "lucide-react";
 
 interface AdminDashboardProps {
-  data: Request[];
+  data: SingleRequestFullResponse[];
 }
 
 export function AdminDashboard({ data }: AdminDashboardProps) {
   const { currentUser } = useAuth();
-  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
-  const [responseText, setResponseText] = useState("");
 
   if (!currentUser || currentUser.role !== "ADMIN") return null;
 
-  const stats = {
-    total: data.length,
-    resolved: data.filter(r => r.resolved).length,
-    pending: data.filter(r => !r.resolved && r.priority !== "urgent").length,
-    urgent: data.filter(r => r.priority === "urgent" && !r.resolved).length,
-    new: data.filter(r => !r.resolved).length
-  };
 
-  const selectedRequest = data.find(r => r.id === selectedRequestId);
+    const stats = {
+        total: 0,
+        resolved: 0,
+        pending: 0,
+        urgent: 0
+    };
 
-  const handleSelectRequest = (id: number) => setSelectedRequestId(id);
+    (function calculateStats(){
 
-  const handleAdminResponse = async () => {
-    if (!selectedRequest || !responseText.trim()) return;
+      for (let i = 0 ; i < data.length ; i++){
 
-    try {
-      await wrapRequest(`/api/v1/request/send-admin-response`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requestId: selectedRequest.id,
-          admin: currentUser.fullName,
-          adminResponse: responseText
-        })
-      });
+          const response = data[i];
 
-      setResponseText("");
-      // обновить данные локально, либо перезагрузить панель
-    } catch (err) {
-      console.error(err);
-    }
-  };
+          stats.total ++;
 
-  const handleRejectRequest = async () => {
-    if (!selectedRequest) return;
+          if (response.userRequest.resolved) stats.resolved++;
 
-    try {
-      await wrapRequest(`/api/v1/request/deleteRequest?id=${selectedRequest.id}&issuer=${selectedRequest.issuer}`, {
-        method: "DELETE"
-      });
+          if (!response.userRequest.resolved) stats.pending++;
 
-      setSelectedRequestId(null);
-      // обновить данные локально после удаления
-    } catch (err) {
-      console.error(err);
-    }
-  };
+          if (response.userRequest.priority === "urgent") stats.urgent++;
+
+      }
+  }())
 
   return (
     <div className="p-6 space-y-6">
@@ -114,57 +83,6 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             <p className="text-xs text-muted-foreground">Immediate action needed</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle>Requests</CardTitle>
-            <CardDescription>Select a request to respond</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {data.map((req) => (
-              <RequestCard
-                key={req.id}
-                request={req}
-                onClick={() => handleSelectRequest(req.id)}
-                isSelected={selectedRequestId === req.id}
-              />
-            ))}
-          </CardContent>
-        </Card>
-
-        {selectedRequest && (
-          <Card className="lg:col-span-2 hover-lift">
-            <CardHeader>
-              <CardTitle>{selectedRequest.title}</CardTitle>
-              <CardDescription>
-                Priority: {selectedRequest.priority} | Status: {selectedRequest.resolved ? "Resolved" : "Open"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p><b>Category:</b> {selectedRequest.category}</p>
-              <p><b>Subcategory:</b> {selectedRequest.subcategory}</p>
-              <p><b>Description:</b> {selectedRequest.description}</p>
-              <p><b>Issuer:</b> {selectedRequest.issuer}</p>
-
-              <Textarea
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-                placeholder="Write your response..."
-              />
-
-              <div className="flex gap-2">
-                <Button onClick={handleAdminResponse} className="gradient-primary">
-                  Send Response
-                </Button>
-                <Button onClick={handleRejectRequest} variant="destructive">
-                  Reject Request
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

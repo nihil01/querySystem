@@ -1,13 +1,11 @@
 package az.gov.taxes.QuerySystem.services.slack;
 
 import az.gov.taxes.QuerySystem.configuration.AppBeans;
+import az.gov.taxes.QuerySystem.models.db.AdminResponse;
 import az.gov.taxes.QuerySystem.models.db.Request;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
-import com.slack.api.methods.response.conversations.ConversationsListResponse;
-import com.slack.api.model.Conversation;
-import com.slack.api.model.ConversationType;
 import com.slack.api.model.User;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -33,10 +31,17 @@ public class SlackService {
 
     private final AppBeans appBeans;
 
-    public Mono<Void> sendMessage(Request request) {
+    public Mono<Void> sendMessage(Request request, RequestType requestType) {
         return Mono.fromRunnable(() -> {
-            sendMessageToAdminChannel(request, RequestType.CREATE);
+            sendMessageToAdminChannel(request, requestType);
             sendMessageToUser(request);
+        });
+    }
+
+    public Mono<Void> sendMessage(Request req, AdminResponse request, RequestType requestType, String issuer) {
+        return Mono.fromRunnable(() -> {
+            sendMessageToAdminChannel(req, request, requestType);
+            sendMessageToUser(request, req, issuer, requestType);
         });
     }
 
@@ -80,6 +85,22 @@ public class SlackService {
         }
     }
 
+    private void sendMessageToAdminChannel(Request req, AdminResponse request, RequestType requestType){
+        try {
+            ChatPostMessageResponse response = slack.methods(token).chatPostMessage(r -> r
+                    .channel(CHANNEL)
+                    .text(requestType == RequestType.REJECT ? formatRejectRequestMessage(request) : formatCloseRequestMessage(req, request))
+            );
+
+            if (!response.isOk()) {
+                throw new RuntimeException("Slack error: " + response.getError());
+            }
+
+        } catch (IOException | SlackApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void sendMessageToUser(Request request){
         try {
             String userId = this.getUserId(request.getIssuer());
@@ -94,7 +115,7 @@ public class SlackService {
             ChatPostMessageResponse response = slack.methods(token).chatPostMessage(r -> r
                 .channel(dmChannelId)
                 .text(
-                    "Salam! Sizin sorğunuz qəbul edildi. \n" +
+                    "Sizin sorğunuz qəbul edildi. \n" +
                     "Tezliklə cavab alacaqsınız və bu barədə xəbərdar ediləcəksiniz. \n"+
                     "Sorğu №"+request.getId()
                 )
@@ -103,6 +124,64 @@ public class SlackService {
 
             if (!response.isOk()) {
                 throw new RuntimeException("Slack error: " + response.getError());
+            }
+
+        } catch (IOException | SlackApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void sendMessageToUser(AdminResponse request, Request req, String issuer, RequestType requestType){
+        try {
+            String userId = this.getUserId(issuer);
+
+            if (userId == null) return;
+
+            String dmChannelId = slack.methods(token).conversationsOpen(
+                    conversationsOpenRequestBuilder ->
+                            conversationsOpenRequestBuilder.users(List.of(userId))).getChannel().getId();
+
+
+            if (requestType == RequestType.REJECT){
+
+                ChatPostMessageResponse response = slack.methods(token).chatPostMessage(r -> r
+                        .channel(dmChannelId)
+                        .text(
+                                "Sorğu №"+request.getId() + "\n" +
+                                        "Sizin sorğunuz imtina olunub. \n" +
+                                        "Imtina eden admin: "+ request.getAdmin() + "\n" +
+                                        "Sebeb: \n" +
+                                        request.getAdminResponse()
+                        )
+                );
+
+                if (!response.isOk()) {
+                    throw new RuntimeException("Slack error: " + response.getError());
+                }
+
+            }else{
+
+                ChatPostMessageResponse response = slack.methods(token).chatPostMessage(r -> r
+                        .channel(dmChannelId)
+                        .text(
+                                "Sorğu №"+request.getRequestId() + "\n" +
+                                    "Sorğunuz uğurla bağlanıb. \n" +
+                                    "Qəbul edən Admin: "+ request.getAdmin() + "\n" +
+                                    "Təyin olunmuş məlumat: \n"+
+
+                                    "IP: " + req.getSubnet() + "\n"+
+                                    "VRF: " + req.getVrf() + "\n"+
+                                    "VLAN: " + req.getVlanId() + "\n"+
+
+                                    "Qeyd: \n" +
+                                    request.getAdminResponse()
+                        )
+                );
+
+                if (!response.isOk()) {
+                    throw new RuntimeException("Slack error: " + response.getError());
+                }
+
             }
 
         } catch (IOException | SlackApiException e) {
@@ -129,6 +208,29 @@ public class SlackService {
             "<!channel>";
     }
 
+    private String formatRejectRequestMessage(AdminResponse response) {
+        return "Sorğu №"+response.getRequestId() + "\n" +
+            "Sorğu imtina olunub. \n" +
+            "Imtina eden admin: "+ response.getAdmin() + "\n" +
+            "Sebeb: \n" +
+            response.getAdminResponse();
+    }
+
+    private String formatCloseRequestMessage(Request request, AdminResponse response) {
+        return "Sorğu №"+response.getRequestId() + "\n" +
+                "Sorğu uğurla bağlanıb. \n" +
+                "Qəbul edən Admin: "+ response.getAdmin() + "\n" +
+                "Təyin olunmuş məlumat: \n"+
+
+                "IP: " + request.getSubnet() + "\n"+
+                "VRF: " + request.getVrf() + "\n"+
+                "VLAN: " + request.getVlanId() + "\n"+
+
+                "Qeyd: \n" +
+                response.getAdminResponse() + "\n\n"+
+                "<!channel>";
+    }
+
 
     //save users in a concurrent hashmap
     @PostConstruct
@@ -145,7 +247,7 @@ public class SlackService {
             for (User user : userList) {
                 System.out.println(user);
                 appBeans.slackUsers().put(user.getName(), new HashMap<>(Map.of(
-                        "id", "U09B4575LJ0",
+                        "id", user.getId(),
                         "notification", "YES"
                 )));
             }
@@ -154,7 +256,7 @@ public class SlackService {
             System.out.println(appBeans.slackUsers());
 
         } catch (IOException | SlackApiException e) {
-            System.err.println(e.getMessage());
+            System.err.println("Slack init failed: " + e.getMessage());
         }
     }
 }

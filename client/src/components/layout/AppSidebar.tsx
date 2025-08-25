@@ -33,11 +33,11 @@ export function AppSidebar() {
 
     const adminItems = [
         { title: "Dashboard", url: "/", icon: Home },
-        { title: "All Requests", url: "/admin/requests", icon: MessageSquare },
+        { title: "All Requests", url: "/admin-requests", icon: MessageSquare },
         { title: "Şəbəkə monitorinqi", url: "/admin/users", icon: NetworkIcon },
     ];
 
-    const items = currentUser?.role === 'ADMIN' && currentUser?.preferedDashboard === "ADMIN" ? adminItems : userItems;
+    const items = currentUser?.role === 'ADMIN' ? adminItems : userItems;
 
     const getNavCls = ({ isActive }: { isActive: boolean }) =>
         isActive
@@ -74,7 +74,7 @@ export function AppSidebar() {
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel className="text-muted-foreground">
-                        {currentUser?.role === "ADMIN" && currentUser?.preferedDashboard === 'ADMIN' ? 'Admin Panel' : 'User Portal'}
+                        {currentUser?.role === "ADMIN" ? 'Admin Panel' : 'User Portal'}
                     </SidebarGroupLabel>
 
                     <SidebarGroupContent>

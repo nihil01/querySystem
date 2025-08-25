@@ -3,7 +3,7 @@ import { User, UserRole } from '@/types';
 
 interface AuthContextType {
     currentUser: User | null;
-    login: (role: UserRole, email: string, password:string) => void;
+    login: (email: string, password:string) => void;
     logout: () => void;
     isLoggedIn: boolean;
 }
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
     }, []);
 
-    const login = async (role: UserRole, email: string, password:string) => {
+    const login = async (email: string, password:string) => {
         const response = await fetch("http://localhost:8080/api/v1/auth/login", {
             method: "POST",
             headers: {
@@ -45,7 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             body: JSON.stringify({
                 "principal": email,
                 "password": password,
-                "role": role
             }),
         });
 
@@ -56,15 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data: User = await response.json();
         console.log(data)
 
-        console.log("Selected role " + role);
         console.log("User role " + data.role);
 
         if (data && data.refreshToken) {
-            if (data.role !== role) data.role = "USER";
-
-            data.preferedDashboard = role;
             setCurrentUser(data);
-        
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
 

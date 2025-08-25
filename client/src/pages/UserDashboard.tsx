@@ -1,13 +1,13 @@
-import { Request } from "@/types";
+import {Request, SingleRequestFullResponse} from "@/types";
 import { useAuth } from "@/components/layout/AuthProvider";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface UserDashboardProps {
-  data: Request[];
+  data: SingleRequestFullResponse[];
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -25,7 +25,7 @@ export function UserDashboard({ data }: UserDashboardProps) {
 
   const stats = priorities.map(p => ({
     priority: p,
-    count: data.filter(el => el.priority === p).length,
+    count: data.filter(el => el.userRequest.priority === p).length,
   }));
 
   return (

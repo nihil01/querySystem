@@ -2,11 +2,14 @@ package az.gov.taxes.QuerySystem.repositories;
 
 import az.gov.taxes.QuerySystem.models.db.Request;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+
+@Repository
 public interface RequestRepository extends
         ReactiveCrudRepository<az.gov.taxes.QuerySystem.models.db.Request,Long> {
 
